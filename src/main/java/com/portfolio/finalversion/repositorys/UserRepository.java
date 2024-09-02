@@ -2,7 +2,7 @@ package com.portfolio.finalversion.repositorys;
 
 import org.springframework.stereotype.Repository;
 
-import com.portfolio.finalversion.models.User;
+import com.portfolio.finalversion.models.security.User;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

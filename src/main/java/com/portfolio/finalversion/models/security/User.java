@@ -1,7 +1,8 @@
-package com.portfolio.finalversion.models;
+package com.portfolio.finalversion.models.security;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Date;
 
 import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,6 +16,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import lombok.Data;
 
 @Data
@@ -39,30 +42,40 @@ public class User implements UserDetails{
     @Column(name = "uPassword")
     private String contrasena;
 
-    @Column(name = "uRol")
-    private RoleEnum rol;
+    @Column(name = "uPermisos")
+    private Authorities permisos;
 
     @Column(name = "uActivo")
     private boolean activo;
+
+    @Column(name = "uCreacion")
+    private Date fechaCreacion;
+
+    @Column(name = "uModificacion")
+    private Date fechaActualizacion;
 
 
     public User() {
     }
 
-    public User(Integer id, String nombre, String apellido, String alias, String contrasena, RoleEnum rol) {
-        super();
+
+    public User(Integer id, String nombre, String apellido, String alias, String contrasena, Authorities permisos, boolean activo, Date fechaCreacion, Date fechaActualizacion) {
         this.id = id;
         this.nombre = nombre;
         this.apellido = apellido;
         this.alias = alias;
         this.contrasena = contrasena;
-        this.rol = rol;
+        this.permisos = permisos;
+        this.activo = activo;
+        this.fechaCreacion = fechaCreacion;
+        this.fechaActualizacion = fechaActualizacion;
     }
+   
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // TODO Auto-generated method stub
-        return List.of(new SimpleGrantedAuthority(rol.name()));
+        return List.of(new SimpleGrantedAuthority(permisos.getRol().name()));
     }
 
     @Override
@@ -116,24 +129,50 @@ public class User implements UserDetails{
         this.contrasena = contrasena;
     }
 
-    public RoleEnum getRol() {
-        return this.rol;
+    public Authorities getPermisos() {
+        return this.permisos;
     }
 
-    public void setRol(RoleEnum rol) {
-        this.rol = rol;
+    public void setPermisos(Authorities permisos) {
+        this.permisos = permisos;
     }
-
+    
     public boolean isActivo() {
         return this.activo;
     }
-
+    
     public boolean getActivo() {
         return this.activo;
     }
-
+    
     public void setActivo(boolean activo) {
         this.activo = activo;
+    }
+
+    public Date getFechaCreacion() {
+        return this.fechaCreacion;
+    }
+
+    public void setFechaCreacion(Date fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
+
+    public Date getFechaActualizacion() {
+        return this.fechaActualizacion;
+    }
+
+    public void setFechaActualizacion(Date fechaActualizacion) {
+        this.fechaActualizacion = fechaActualizacion;
+    }
+
+    @PrePersist
+    private void onCreate(){
+        this.setFechaCreacion(new Date());
+    }
+
+    @PreUpdate
+    private void onUpdate(){
+        this.setFechaActualizacion(new Date());
     }
 
     @Override
@@ -144,7 +183,6 @@ public class User implements UserDetails{
             ", apellido='" + getApellido() + "'" +
             ", alias='" + getAlias() + "'" +
             ", contrasena='" + getContrasena() + "'" +
-            ", rol='" + getRol() + "'" +
             "}";
     }
 

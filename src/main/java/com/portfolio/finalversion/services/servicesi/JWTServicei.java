@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 public interface JWTServicei {
     
-    public String generateToken(UserDetails userdetails);
+    // public String generateToken(UserDetails userdetails);
 
-    public Key getSiginKey();
+    // public Key getSiginKey();
 }
