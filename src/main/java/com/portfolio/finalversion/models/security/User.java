@@ -3,19 +3,24 @@ package com.portfolio.finalversion.models.security;
 import java.util.Collection;
 import java.util.List;
 import java.util.Date;
+import java.util.ArrayList;
 
 import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.portfolio.finalversion.models.dtos.UserDTO;
 import com.portfolio.finalversion.models.enums.RoleEnum;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.Data;
@@ -23,12 +28,12 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "usuario")
-public class User implements UserDetails{
+public class User{
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "uId")
-    private Integer id;
+    @Column(length = 60, name = "uuId")
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private Long id;
 
     @Column(name = "uNombre")
     private String nombre;
@@ -36,14 +41,15 @@ public class User implements UserDetails{
     @Column(name = "uApellido")
     private String apellido;
 
-    @Column(name = "uAlias")
+    @Column(name = "uAlias", unique = true, nullable = false)
     private String alias;
 
     @Column(name = "uPassword")
     private String contrasena;
 
     @Column(name = "uPermisos")
-    private Authorities permisos;
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Rol> roles = new ArrayList<>();
 
     @Column(name = "uActivo")
     private boolean activo;
@@ -59,111 +65,49 @@ public class User implements UserDetails{
     }
 
 
-    public User(Integer id, String nombre, String apellido, String alias, String contrasena, Authorities permisos, boolean activo, Date fechaCreacion, Date fechaActualizacion) {
+    public User(Long id, String nombre, String apellido, String alias, String contrasena, boolean activo) {
         this.id = id;
         this.nombre = nombre;
         this.apellido = apellido;
         this.alias = alias;
         this.contrasena = contrasena;
-        this.permisos = permisos;
+        // this.permisos = permisos;
         this.activo = activo;
-        this.fechaCreacion = fechaCreacion;
-        this.fechaActualizacion = fechaActualizacion;
+    }
+
+    public User(UserDTO userDTO){
+        this.activo = userDTO.isActivo();
+        this.alias = userDTO.getAlias();
+        this.apellido= userDTO.getApellido();
+        this.contrasena = userDTO.getContrasena();
+        this.nombre = userDTO.getNombre();
+        this.roles = userDTO.getRoles();
+    }
+
+    public void update(User data){
+        setActivo(data.isActivo());
+        setAlias(data.getAlias());
+        setNombre(data.getNombre());
+        setApellido(data.getApellido());
+        setRoles(data.getRoles());
+    }
+
+    public void update(UserDTO data){
+        setActivo(data.isActivo());
+        setAlias(data.getAlias());
+        setNombre(data.getNombre());
+        setApellido(data.getApellido());
+        setRoles(data.getRoles());
+    }
+
+    public void addRol(Rol rol){
+        this.roles.add(rol);
+    }
+
+    public void removeRol(Rol rol){
+        this.roles.remove(rol);
     }
    
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        // TODO Auto-generated method stub
-        return List.of(new SimpleGrantedAuthority(permisos.getRol().name()));
-    }
-
-    @Override
-    public String getPassword() {
-        // TODO Auto-generated method stub
-        return getPassword();
-    }
-
-    @Override
-    public String getUsername() {
-        return getUsername();
-    }
-
-    public Integer getId() {
-        return this.id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getNombre() {
-        return this.nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public String getApellido() {
-        return this.apellido;
-    }
-
-    public void setApellido(String apellido) {
-        this.apellido = apellido;
-    }
-
-    public String getAlias() {
-        return this.alias;
-    }
-
-    public void setAlias(String alias) {
-        this.alias = alias;
-    }
-
-    public String getContrasena() {
-        return this.contrasena;
-    }
-
-    public void setContrasena(String contrasena) {
-        this.contrasena = contrasena;
-    }
-
-    public Authorities getPermisos() {
-        return this.permisos;
-    }
-
-    public void setPermisos(Authorities permisos) {
-        this.permisos = permisos;
-    }
-    
-    public boolean isActivo() {
-        return this.activo;
-    }
-    
-    public boolean getActivo() {
-        return this.activo;
-    }
-    
-    public void setActivo(boolean activo) {
-        this.activo = activo;
-    }
-
-    public Date getFechaCreacion() {
-        return this.fechaCreacion;
-    }
-
-    public void setFechaCreacion(Date fechaCreacion) {
-        this.fechaCreacion = fechaCreacion;
-    }
-
-    public Date getFechaActualizacion() {
-        return this.fechaActualizacion;
-    }
-
-    public void setFechaActualizacion(Date fechaActualizacion) {
-        this.fechaActualizacion = fechaActualizacion;
-    }
 
     @PrePersist
     private void onCreate(){
