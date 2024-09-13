@@ -9,11 +9,11 @@ public interface UserServiceI {
 
     public List<User> findAll();
 
-    public User findByEmail();
+    public User findByAlias(String alias);
 
-    public User findById();
+    public User findById(Long userId);
 
-    public Long create(User user);
+    public Long createOrUpdate(User user);
 
     public void update(User user);
 
