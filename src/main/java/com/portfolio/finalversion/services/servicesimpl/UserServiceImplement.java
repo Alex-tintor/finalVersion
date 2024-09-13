@@ -11,8 +11,11 @@ import org.springframework.stereotype.Service;
 import com.google.gson.Gson;
 import com.portfolio.finalversion.models.dtos.UserDTO;
 import com.portfolio.finalversion.models.security.User;
-import com.portfolio.finalversion.repositorys.UserRepository;
-import com.portfolio.finalversion.services.servicesi.UserServiceI;
+import com.portfolio.finalversion.repositories.UserRepository;
+import com.portfolio.finalversion.services.servicesi.UserServiceInterface;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Objects;
@@ -20,15 +23,15 @@ import java.util.Base64;
 import java.util.stream.Collectors;
 
 @Service
-public class UserService implements UserServiceI, UserDetailsService{
+public class UserServiceImplement implements UserServiceInterface, UserDetailsService{
+    
+    @Autowired 
+    private RolServiceImplement rolService;
 
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired 
-    private RolService rolService;
-
-    public List<User> findAll(){
+    public Flux<User> findAll(){
         return userRepository.findAll();
     }
 
@@ -36,12 +39,17 @@ public class UserService implements UserServiceI, UserDetailsService{
         return userRepository.findByAlias(alias);
     }
 
-    public User findById(Long userId){
-        return userRepository.findById(userId).orElse(null);
+    public Mono<User> findById(Long userId){
+        return userRepository.findById(userId).defaultIfEmpty(new User());
     }
 
-    public Long createOrUpdate(User user){
-        return userRepository.save(user).getId();
+    public Mono<Long> createOrUpdate(User user){
+        return userRepository.save(user).map(User :: getId);
+
+    }
+
+    public Mono<Long> createOrUpdate(Mono<User> user){
+        return userRepository.save(user.block()).map(User :: getId);
 
     }
 
@@ -55,9 +63,9 @@ public class UserService implements UserServiceI, UserDetailsService{
     }
 
     public void disable(Long uuid){
-        User userToDisable = findById(uuid);
+        Mono<User> userToDisable = findById(uuid);
         if(Objects.nonNull(userToDisable)){
-            userToDisable.setActivo(false);
+            userToDisable.map(user -> {user.setActivo(false); return user;});
             createOrUpdate(userToDisable);
         }
     }
