@@ -3,6 +3,7 @@ package com.portfolio.finalversion.services.servicesimpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,7 +24,7 @@ import java.util.Base64;
 import java.util.stream.Collectors;
 
 @Service
-public class UserServiceImplement implements UserServiceInterface, UserDetailsService{
+public class UserServiceImplement implements UserServiceInterface, ReactiveUserDetailsService{
     
     @Autowired 
     private RolServiceImplement rolService;
@@ -35,7 +36,7 @@ public class UserServiceImplement implements UserServiceInterface, UserDetailsSe
         return userRepository.findAll();
     }
 
-    public User findByAlias(String alias){
+    public Mono<User> findByAlias(String alias){
         return userRepository.findByAlias(alias);
     }
 
@@ -54,7 +55,7 @@ public class UserServiceImplement implements UserServiceInterface, UserDetailsSe
     }
 
     public void update(User user){
-        User userToUpdate = userRepository.findByAlias(user.getAlias());
+        Mono<User> userToUpdate = userRepository.findByAlias(user.getAlias());
         if (Objects.nonNull(userToUpdate)) {
             createOrUpdate(userToUpdate);
         }else{
@@ -78,7 +79,7 @@ public class UserServiceImplement implements UserServiceInterface, UserDetailsSe
         return Objects.nonNull(findByAlias(alias));
     }
 
-    public User findByToken(String auth){
+    public Mono<User> findByToken(String auth){
         String token = auth.split(" ")[1];
         String[] chunks = token.split("\\.");
         Base64.Decoder decoder = Base64.getUrlDecoder();
@@ -99,16 +100,23 @@ public class UserServiceImplement implements UserServiceInterface, UserDetailsSe
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = findByAlias(username);
-        List<GrantedAuthority> permisos = user.getRoles().stream()
-                                            .map(
-                                                role -> new SimpleGrantedAuthority(
-                                                    role.getTipoRol().name())
-                                            ).collect(Collectors.toList());
-        return new org.springframework.security.core.userdetails.User(user.getAlias(), user.getContrasena(),
-                user.isActivo(),true,true,true,permisos);
+    public Mono<UserDetails> findByUsername(String username) {
+        return userRepository.findByAlias(username)
+            .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found")))
+            .map(user -> {
+                List<GrantedAuthority> permisos = user.getRoles().stream()
+                    .map(role -> new SimpleGrantedAuthority(role.getTipoRol().name()))
+                    .collect(Collectors.toList());
+
+                // Retornamos un UserDetails compatible con Spring Security
+                return new org.springframework.security.core.userdetails.User(
+                    user.getAlias(), 
+                    user.getContrasena(),
+                    user.isActivo(), true, true, true, permisos
+                );
+            });
     }
+
 
     
 }

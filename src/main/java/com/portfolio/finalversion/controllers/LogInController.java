@@ -1,24 +1,57 @@
 package com.portfolio.finalversion.controllers;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
 
+import com.portfolio.finalversion.models.dtos.LogInDTO;
+import com.portfolio.finalversion.services.servicesimpl.JWTService;
+
+import reactor.core.publisher.Mono;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 
 @RestController
+@RequestMapping("/auth")
 public class LogInController {
-    
-    @GetMapping("/login")
-    public String logIn() {
-        return "logIn";
+
+    private final ReactiveAuthenticationManager reactiveAuthenticationManager;
+    private final JWTService jwtService;
+
+    public LogInController(ReactiveAuthenticationManager authenticationManager, JWTService jwtService){
+        this.reactiveAuthenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
     
-    @GetMapping("/home")
-    public String home() {
-        return "home"; // Retorna la vista "home.html"
+    @PostMapping("/login")
+    public Mono<ResponseEntity<JwtAuthenticationResponse>> login(@RequestBody LogInDTO logInDTO) {
+        return reactiveAuthenticationManager
+            .authenticate(new UsernamePasswordAuthenticationToken(logInDTO.getAlias(), logInDTO.getPassword()))
+            .map(auth ->{
+                String token = jwtService.generarToken(auth);
+                return ResponseEntity.ok(new JwtAuthenticationResponse(token));
+            })
+            .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()));
     }
+
+    public record LoginRequest(String alias, String password) {
+    }
+
+    public static class JwtAuthenticationResponse{
+    
+        private final String token;
+
+        public JwtAuthenticationResponse(String token){
+            this.token = token;
+        }
+        
+    }
+    
 }

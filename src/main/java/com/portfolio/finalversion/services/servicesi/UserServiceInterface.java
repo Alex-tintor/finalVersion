@@ -10,12 +10,11 @@ import com.portfolio.finalversion.models.security.User;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;;
 
-@Service
 public interface UserServiceInterface {
 
     public Flux<User> findAll();
 
-    public User findByAlias(String alias);
+    public Mono<User> findByAlias(String alias);
 
     public Mono<User> findById(Long userId);
 
@@ -29,7 +28,7 @@ public interface UserServiceInterface {
 
     public Boolean validate(String alias);
 
-    public User findByToken(String token);
+    public Mono<User> findByToken(String token);
 
     public Boolean isAdmin(User user);
 
