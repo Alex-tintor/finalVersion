@@ -42,12 +42,6 @@ public class JwttokenFilter implements WebFilter{
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getPath().toString();
 
-        // Ignorar el filtro si la ruta es pública
-        if (path.startsWith("/healt") || path.startsWith("/auth/login")) {
-            log.info("Ruta pública, se omite el filtro JWT");
-            return chain.filter(exchange); // Omitimos el filtro y seguimos la cadena
-        }
-
         // Obtener el token del encabezado de autorización
         String token = obtenerJwtDePeticion(request);
 
