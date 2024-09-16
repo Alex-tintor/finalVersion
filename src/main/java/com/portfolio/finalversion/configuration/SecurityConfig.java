@@ -30,7 +30,7 @@ public class SecurityConfig {
         return http
             .csrf(ServerHttpSecurity.CsrfSpec::disable) // Deshabilitamos CSRF porque trabajamos con tokens
             .authorizeExchange((auth) -> 
-                auth.pathMatchers("/healt", "/auth/login").permitAll() // Permitimos el acceso sin autenticación al login
+                auth.pathMatchers("/healt", "/auth/login", "/usuarios/crear","/usuarios/consultar/rol").permitAll() // Permitimos el acceso sin autenticación al login
                      // Requerimos autenticación para cualquier otra petición
             )
             .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)

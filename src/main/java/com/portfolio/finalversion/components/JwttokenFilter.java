@@ -42,7 +42,9 @@ public class JwttokenFilter implements WebFilter{
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getPath().toString();
 
-        // Obtener el token del encabezado de autorización
+        if (request.getPath().toString().startsWith("/usuarios/consultar/rol")) {
+            return chain.filter(exchange);
+        }
         String token = obtenerJwtDePeticion(request);
 
         if (token != null && jwtService.validarToken(token)) {

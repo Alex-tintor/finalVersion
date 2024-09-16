@@ -1,25 +1,36 @@
-CREATE TABLE usuario (
-    uuid BIGINT PRIMARY KEY,                -- ID principal
-    uNombre VARCHAR(255),                   -- Nombre del usuario
-    uApellido VARCHAR(255),                 -- Apellido del usuario
-    uAlias VARCHAR(255) UNIQUE NOT NULL,    -- Alias único
-    uPassword VARCHAR(255),                 -- Contraseña
-    uPermisos BIGINT,                       -- Referencia a la tabla Rol (FK)
-    uActivo BOOLEAN,                        -- Estado activo
-    uCreacion TIMESTAMP,                    -- Fecha de creación
-    uModificacion TIMESTAMP                 -- Fecha de actualización
-);
+-- Verifica si la tabla 'usuario' no existe, y si no existe, créala
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[usuario]') AND type in (N'U'))
+BEGIN
+    EXEC('CREATE TABLE usuario (
+        uuid BIGINT PRIMARY KEY, 
+        uNombre VARCHAR(255), 
+        uApellido VARCHAR(255), 
+        uAlias VARCHAR(255) UNIQUE NOT NULL, 
+        uPassword VARCHAR(255), 
+        uPermisos BIGINT, 
+        uActivo BIT, 
+        uCreacion TIMESTAMP, 
+        uModificacion DATETIME2
+    )')
+END;
+-- Verifica si la tabla 'Rol' no existe, y si no existe, créala
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Rol]') AND type in (N'U'))
+BEGIN
+    EXEC('CREATE TABLE Rol (
+        rUuid BIGINT PRIMARY KEY, 
+        rTipo VARCHAR(10) UNIQUE
+    )')
+END;
 
--- Relación ManyToMany entre User y Rol se maneja a través de una tabla intermedia
-CREATE TABLE user_roles (
-    user_id BIGINT,
-    rol_id BIGINT,
-    PRIMARY KEY (user_id, rol_id),
-    FOREIGN KEY (user_id) REFERENCES usuario(uuid),
-    FOREIGN KEY (rol_id) REFERENCES Rol(rUuid)
-);
+-- Verifica si la tabla 'userRoles' no existe, y si no existe, créala
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[userRoles]') AND type in (N'U'))
+BEGIN
+    EXEC('CREATE TABLE userRoles (
+        user_id BIGINT, 
+        rol_id BIGINT, 
+        PRIMARY KEY (user_id, rol_id), 
+        FOREIGN KEY (user_id) REFERENCES usuario(uuid), 
+        FOREIGN KEY (rol_id) REFERENCES Rol(rUuid)
+    )')
+END;
 
-CREATE TABLE Rol (
-    rUuid BIGINT PRIMARY KEY,                -- ID principal
-    rTipo VARCHAR(10) UNIQUE                 -- Tipo de rol, columna única
-);
