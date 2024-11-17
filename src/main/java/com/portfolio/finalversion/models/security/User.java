@@ -1,9 +1,12 @@
 package com.portfolio.finalversion.models.security;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import com.portfolio.finalversion.models.dtos.UserDTO;
@@ -15,30 +18,38 @@ import lombok.Data;
 public class User{
     
     @Id
+    @Column("uuid")
     private Long id;
 
+    @Column("uNombre")
     private String nombre;
 
+    @Column("uApellido")
     private String apellido;
 
+    @Column("uAlias")
     private String alias;
 
+    @Column("uPassword")
     private String contrasena;
 
+    @Column("uActivo")
     private boolean activo;
 
-    private Date fechaCreacion;
+    @Column("uCreacion")
+    private LocalDateTime fechaCreacion;
 
-    private Date fechaActualizacion;
+    @Column("uModificacion")
+    private LocalDateTime fechaActualizacion;
 
+    @Transient
     private List<Rol> roles;
 
 
     public User() {
     }
 
-    public User(Long id, String nombre, String apellido, String alias, String contrasena, boolean activo, Date fechaCreacion, Date fechaActualizacion, List<Rol> roles) {
-        this.id = id;
+    public User(String nombre, String apellido, String alias, String contrasena, boolean activo, LocalDateTime fechaCreacion, LocalDateTime fechaActualizacion, List<Rol> roles) {
         this.nombre = nombre;
         this.apellido = apellido;
         this.alias = alias;
@@ -48,6 +59,7 @@ public class User{
         this.fechaActualizacion = fechaActualizacion;
         this.roles = roles;
     }
+
 
     public User(UserDTO userDTO){
         this.activo = userDTO.isActivo();

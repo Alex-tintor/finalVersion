@@ -14,13 +14,16 @@ import com.portfolio.finalversion.models.dtos.UserDTO;
 import com.portfolio.finalversion.models.security.User;
 import com.portfolio.finalversion.repositories.UserRepository;
 import com.portfolio.finalversion.services.servicesi.UserServiceInterface;
+import com.portfolio.finalversion.services.utils.SecurityUtils;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Objects;
+import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,6 +48,9 @@ public class UserServiceImplement implements UserServiceInterface, ReactiveUserD
     }
 
     public Mono<Long> createOrUpdate(User user){
+        user.setContrasena(SecurityUtils.encodePass(user.getContrasena()));
+        // user.setFechaCreacion(LocalDateTime.now());
+        user.setFechaActualizacion(LocalDateTime.now());
         return userRepository.save(user).map(User :: getId);
 
     }

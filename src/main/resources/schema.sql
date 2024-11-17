@@ -2,12 +2,11 @@
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[usuario]') AND type in (N'U'))
 BEGIN
     EXEC('CREATE TABLE usuario (
-        uuid BIGINT PRIMARY KEY, 
+        uuid BIGINT IDENTITY(1,1) PRIMARY KEY, 
         uNombre VARCHAR(255), 
         uApellido VARCHAR(255), 
         uAlias VARCHAR(255) UNIQUE NOT NULL, 
         uPassword VARCHAR(255), 
-        uPermisos BIGINT, 
         uActivo BIT, 
         uCreacion TIMESTAMP, 
         uModificacion DATETIME2
