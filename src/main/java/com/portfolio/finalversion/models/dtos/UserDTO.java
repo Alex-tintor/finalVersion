@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.portfolio.finalversion.models.security.Rol;
 import com.portfolio.finalversion.models.security.User;
 
 import jakarta.validation.constraints.NotBlank;
@@ -36,7 +35,7 @@ public class UserDTO implements Serializable{
     @NotBlank
     private String contrasena;
 
-    private List<Rol> roles = new ArrayList<>();
+    private List<Long> roles = new ArrayList<Long>();
 
     private boolean activo;
 

@@ -1,84 +1,52 @@
 package com.portfolio.finalversion.models.security;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Date;
-import java.util.ArrayList;
+import java.util.List;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import com.portfolio.finalversion.models.dtos.UserDTO;
-import com.portfolio.finalversion.models.enums.RoleEnum;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import lombok.Data;
 
 @Data
-@Entity
 @Table(name = "usuario")
 public class User{
     
     @Id
-    @Column(length = 60, name = "uuId")
-    @GeneratedValue(strategy = GenerationType.UUID)
     private Long id;
 
-    @Column(name = "uNombre")
     private String nombre;
 
-    @Column(name = "uApellido")
     private String apellido;
 
-    @Column(name = "uAlias", unique = true, nullable = false)
     private String alias;
 
-    @Column(name = "uPassword")
     private String contrasena;
 
- @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinTable(
-        name = "user_roles",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private List<Rol> roles = new ArrayList<>();
-
-    @Column(name = "uActivo")
     private boolean activo;
 
-    @Column(name = "uCreacion")
     private Date fechaCreacion;
 
-    @Column(name = "uModificacion")
     private Date fechaActualizacion;
+
+    private List<Rol> roles;
 
 
     public User() {
     }
 
-
-    public User(Long id, String nombre, String apellido, String alias, String contrasena, boolean activo) {
+    public User(Long id, String nombre, String apellido, String alias, String contrasena, boolean activo, Date fechaCreacion, Date fechaActualizacion, List<Rol> roles) {
         this.id = id;
         this.nombre = nombre;
         this.apellido = apellido;
         this.alias = alias;
         this.contrasena = contrasena;
-        // this.permisos = permisos;
         this.activo = activo;
+        this.fechaCreacion = fechaCreacion;
+        this.fechaActualizacion = fechaActualizacion;
+        this.roles = roles;
     }
 
     public User(UserDTO userDTO){
@@ -87,7 +55,6 @@ public class User{
         this.apellido= userDTO.getApellido();
         this.contrasena = userDTO.getContrasena();
         this.nombre = userDTO.getNombre();
-        this.roles = userDTO.getRoles();
     }
 
     public void update(User data){
@@ -95,7 +62,6 @@ public class User{
         setAlias(data.getAlias());
         setNombre(data.getNombre());
         setApellido(data.getApellido());
-        setRoles(data.getRoles());
     }
 
     public void update(UserDTO data){
@@ -103,26 +69,6 @@ public class User{
         setAlias(data.getAlias());
         setNombre(data.getNombre());
         setApellido(data.getApellido());
-        setRoles(data.getRoles());
-    }
-
-    public void addRol(Rol rol){
-        this.roles.add(rol);
-    }
-
-    public void removeRol(Rol rol){
-        this.roles.remove(rol);
-    }
-   
-
-    @PrePersist
-    private void onCreate(){
-        this.setFechaCreacion(new Date());
-    }
-
-    @PreUpdate
-    private void onUpdate(){
-        this.setFechaActualizacion(new Date());
     }
 
     @Override
@@ -133,6 +79,9 @@ public class User{
             ", apellido='" + getApellido() + "'" +
             ", alias='" + getAlias() + "'" +
             ", contrasena='" + getContrasena() + "'" +
+            ", activo='" + isActivo() + "'" +
+            ", fechaCreacion='" + getFechaCreacion() + "'" +
+            ", fechaActualizacion='" + getFechaActualizacion() + "'" +
             "}";
     }
 
