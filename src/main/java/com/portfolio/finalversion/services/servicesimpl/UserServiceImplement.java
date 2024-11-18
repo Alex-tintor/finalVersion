@@ -12,8 +12,12 @@ import org.springframework.stereotype.Service;
 import com.google.gson.Gson;
 import com.portfolio.finalversion.models.dtos.UserDTO;
 import com.portfolio.finalversion.models.security.User;
+import com.portfolio.finalversion.models.security.UserRoles;
+import com.portfolio.finalversion.repositories.RolRepository;
 import com.portfolio.finalversion.repositories.UserRepository;
+import com.portfolio.finalversion.repositories.UserRolesRepository;
 import com.portfolio.finalversion.services.servicesi.UserServiceInterface;
+import com.portfolio.finalversion.services.utils.ExcepcionPersonalizada;
 import com.portfolio.finalversion.services.utils.SecurityUtils;
 
 import reactor.core.publisher.Flux;
@@ -27,65 +31,91 @@ import java.util.Date;
 import java.util.stream.Collectors;
 
 @Service
-public class UserServiceImplement implements UserServiceInterface, ReactiveUserDetailsService{
-    
-    @Autowired 
+public class UserServiceImplement implements UserServiceInterface, ReactiveUserDetailsService {
+
+    @Autowired
     private RolServiceImplement rolService;
 
     @Autowired
     private UserRepository userRepository;
 
-    public Flux<User> findAll(){
+    @Autowired
+    private UserRolesRepository userRolesRepository;
+
+    public Flux<User> findAll() {
         return userRepository.findAll();
     }
 
-    public Mono<User> findByAlias(String alias){
+    public Mono<User> findByAlias(String alias) {
         return userRepository.findByAlias(alias);
     }
 
-    public Mono<User> findById(Long userId){
+    public Mono<User> findById(Long userId) {
         return userRepository.findById(userId).defaultIfEmpty(new User());
     }
 
-    public Mono<Long> createOrUpdate(User user){
+    public Mono<Long> createOrUpdate(User user) throws ExcepcionPersonalizada {
         user.setContrasena(SecurityUtils.encodePass(user.getContrasena()));
-        // user.setFechaCreacion(LocalDateTime.now());
         user.setFechaActualizacion(LocalDateTime.now());
-        return userRepository.save(user).map(User :: getId);
+        user.setFechaCreacion(LocalDateTime.now());
+    
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            return Mono.error(new ExcepcionPersonalizada("No es posible crear un usuario sin roles"));
+        }
+    
+        Mono<Object> rsultMono = findByAlias(user.getAlias())
+            .flatMap(existeUsuario -> Mono.error(new ExcepcionPersonalizada(
+                "Alias ya existe, no es posible crear un usuario con un alias existente, por favor intente de nuevo con un alias distinto")))
+            .switchIfEmpty(
+                userRepository.save(user) // Guarda el usuario
+                    .flatMap(usuarioCreado -> 
+                        Flux.fromIterable(user.getRoles())
+                            .flatMap(rol -> 
+                                rolService.findRoleBytipo(rol.getTipoRol())
+                                    .flatMap(rolEncontrado -> 
+                                        userRolesRepository.save(new UserRoles(rolEncontrado.getRUuid(), usuarioCreado.getId())) 
+                                    )
+                            )
+                            .then(Mono.just(user.getId())) 
+                    )
+            );
+        return rsultMono.cast(Long.class);
+    }
+
+    public Mono<Long> createOrUpdate(Mono<User> user) {        
+        return userRepository.save(user.block()).map(User::getId);
 
     }
 
-    public Mono<Long> createOrUpdate(Mono<User> user){
-        return userRepository.save(user.block()).map(User :: getId);
-
-    }
-
-    public void update(User user){
+    public void update(User user) {
         Mono<User> userToUpdate = userRepository.findByAlias(user.getAlias());
         if (Objects.nonNull(userToUpdate)) {
             createOrUpdate(userToUpdate);
-        }else{
+        } else {
             createOrUpdate(userToUpdate);
         }
     }
 
-    public void disable(Long uuid){
+    public void disable(Long uuid) {
         Mono<User> userToDisable = findById(uuid);
-        if(Objects.nonNull(userToDisable)){
-            userToDisable.map(user -> {user.setActivo(false); return user;});
+        if (Objects.nonNull(userToDisable)) {
+            userToDisable.map(user -> {
+                user.setActivo(false);
+                return user;
+            });
             createOrUpdate(userToDisable);
         }
     }
 
-    public Boolean validate(Long uuid){
+    public Boolean validate(Long uuid) {
         return Objects.nonNull(findById(uuid));
     }
 
-    public Boolean validate(String alias){
+    public Boolean validate(String alias) {
         return Objects.nonNull(findByAlias(alias));
     }
 
-    public Mono<User> findByToken(String auth){
+    public Mono<User> findByToken(String auth) {
         String token = auth.split(" ")[1];
         String[] chunks = token.split("\\.");
         Base64.Decoder decoder = Base64.getUrlDecoder();
@@ -94,32 +124,31 @@ public class UserServiceImplement implements UserServiceInterface, ReactiveUserD
         String data = json.fromJson(payload, String.class);
         String alias = data.valueOf("user_alias");
         return findByAlias(alias);
-        
+
     }
 
-    public Boolean isAdmin(User user){
+    public Boolean isAdmin(User user) {
         return rolService.isAdmin(user);
     }
 
-    public UserDTO getUserDto(User user){
+    public UserDTO getUserDto(User user) {
         return new UserDTO(user);
     }
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {
         return userRepository.findByAlias(username)
-            .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found")))
-            .map(user -> {
-                List<GrantedAuthority> permisos = user.getRoles().stream()
-                    .map(role -> new SimpleGrantedAuthority(role.getTipoRol().name()))
-                    .collect(Collectors.toList());
+                .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found")))
+                .map(user -> {
+                    List<GrantedAuthority> permisos = user.getRoles().stream()
+                            .map(role -> new SimpleGrantedAuthority(role.getTipoRol().name()))
+                            .collect(Collectors.toList());
 
-                // Retornamos un UserDetails compatible con Spring Security
-                return new org.springframework.security.core.userdetails.User(
-                    user.getAlias(), 
-                    user.getContrasena(),
-                    user.isActivo(), true, true, true, permisos
-                );
-            });
+                    // Retornamos un UserDetails compatible con Spring Security
+                    return new org.springframework.security.core.userdetails.User(
+                            user.getAlias(),
+                            user.getContrasena(),
+                            user.isActivo(), true, true, true, permisos);
+                });
     }
 }

@@ -12,6 +12,7 @@ import com.portfolio.finalversion.models.dtos.UserDTO;
 import com.portfolio.finalversion.models.security.User;
 import com.portfolio.finalversion.services.servicesi.RolServiceInterface;
 import com.portfolio.finalversion.services.servicesi.UserServiceInterface;
+import com.portfolio.finalversion.services.utils.ExcepcionPersonalizada;
 
 import reactor.core.publisher.Mono;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,23 +31,28 @@ public class UserController {
     private RolServiceInterface rolService;
 
     @PostMapping("/crear")
-    public Mono<ResponseEntity<?>> crearUsuario(@RequestBody UserDTO userDTO) {
+    public Mono<ResponseEntity<?>> crearUsuario(@RequestBody UserDTO userDTO) throws ExcepcionPersonalizada {
         User usuario = new User(userDTO);
     
-        return userService.createOrUpdate(usuario)
-            .flatMap(id -> {
-                if (id != null) {
-                    return Mono.just(ResponseEntity.ok(usuario)); // Devolver el usuario creado
-                } else {
-                    return Mono.just(ResponseEntity.badRequest().body("No fue posible crear el usuario")); // Devolver error de creación
-                }
-            })
-            .defaultIfEmpty(ResponseEntity.badRequest().body("No fue posible crear el usuario")) // Si el Mono está vacío
-            .onErrorResume(e -> 
-                {
-                    e.printStackTrace();
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error del servidor: " + e.getMessage()));
-                }); // Manejo de errores
+        try{
+
+            return userService.createOrUpdate(usuario)
+                .flatMap(id -> {
+                    if (id != null) {
+                        return Mono.just(ResponseEntity.ok(usuario)); // Devolver el usuario creado
+                    } else {
+                        return Mono.just(ResponseEntity.badRequest().body("No fue posible crear el usuario")); // Devolver error de creación
+                    }
+                })
+                .defaultIfEmpty(ResponseEntity.badRequest().body("No fue posible crear el usuario")) // Si el Mono está vacío
+                .onErrorResume(e -> 
+                    {
+                        e.printStackTrace();
+                        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error del servidor: " + e.getMessage()));
+                    }); // Manejo de errores
+        }catch(ExcepcionPersonalizada e){
+            return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage()));
+        }
     }
 
     @GetMapping("/consultar/rol")

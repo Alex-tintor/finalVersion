@@ -3,6 +3,7 @@ package com.portfolio.finalversion.models.security;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -10,6 +11,7 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import com.portfolio.finalversion.models.dtos.UserDTO;
+import com.portfolio.finalversion.models.enums.RoleEnum;
 
 import lombok.Data;
 
@@ -67,6 +69,7 @@ public class User{
         this.apellido= userDTO.getApellido();
         this.contrasena = userDTO.getContrasena();
         this.nombre = userDTO.getNombre();
+        this.roles = userDTO.getRoles().stream().map(Rol::new).toList();
     }
 
     public void update(User data){

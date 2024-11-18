@@ -2,6 +2,7 @@ package com.portfolio.finalversion.services.servicesi;
 
 import org.springframework.stereotype.Service;
 
+import com.portfolio.finalversion.models.enums.RoleEnum;
 import com.portfolio.finalversion.models.security.Rol;
 import com.portfolio.finalversion.models.security.User;
 
@@ -12,4 +13,6 @@ public interface RolServiceInterface {
     public Mono<Rol> findRole(Long id);
 
     public Boolean isAdmin(User user);
+
+    public Mono<Rol> findRoleBytipo(RoleEnum role);
 }

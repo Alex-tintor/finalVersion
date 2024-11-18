@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.portfolio.finalversion.models.dtos.UserDTO;
 import com.portfolio.finalversion.models.security.User;
+import com.portfolio.finalversion.services.utils.ExcepcionPersonalizada;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;;
@@ -18,7 +19,7 @@ public interface UserServiceInterface {
 
     public Mono<User> findById(Long userId);
 
-    public Mono<Long> createOrUpdate(User user);
+    public Mono<Long> createOrUpdate(User user) throws ExcepcionPersonalizada;
 
     public void update(User user);
 
