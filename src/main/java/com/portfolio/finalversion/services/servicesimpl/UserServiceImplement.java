@@ -1,6 +1,7 @@
 package com.portfolio.finalversion.services.servicesimpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.task.TaskExecutionProperties.Simple;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
@@ -20,6 +21,7 @@ import com.portfolio.finalversion.services.servicesi.UserServiceInterface;
 import com.portfolio.finalversion.services.utils.ExcepcionPersonalizada;
 import com.portfolio.finalversion.services.utils.SecurityUtils;
 
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -31,6 +33,7 @@ import java.util.Date;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class UserServiceImplement implements UserServiceInterface, ReactiveUserDetailsService {
 
     @Autowired
@@ -137,18 +140,31 @@ public class UserServiceImplement implements UserServiceInterface, ReactiveUserD
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {
+        log.warn("Inicia método: findByUsername con username: {}", username);
+    
         return userRepository.findByAlias(username)
+                .doOnNext(user -> log.warn("Usuario encontrado: {}", user.getAlias()))
                 .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found")))
-                .map(user -> {
-                    List<GrantedAuthority> permisos = user.getRoles().stream()
-                            .map(role -> new SimpleGrantedAuthority(role.getTipoRol().name()))
-                            .collect(Collectors.toList());
-
-                    // Retornamos un UserDetails compatible con Spring Security
-                    return new org.springframework.security.core.userdetails.User(
-                            user.getAlias(),
-                            user.getContrasena(),
-                            user.isActivo(), true, true, true, permisos);
+                .flatMap(user -> {
+                    log.warn("Cargando roles para el usuario con ID: {}", user.getId());
+                    
+                    return userRolesRepository.findByUserId(user.getId())
+                            .flatMap(uRol -> rolService.findRole(uRol.getRolId())
+                                    .map(rol -> {
+                                        log.warn("Rol encontrado: {}", rol.getTipoRol());
+                                        return new SimpleGrantedAuthority("ROLE_" + rol.getTipoRol().name());
+                                    })
+                            )
+                            .collectList()
+                            .doOnSuccess(authorities -> log.warn("Roles mapeados a autoridades: {}", authorities))
+                            .map(authorities -> {
+                                log.warn("Creando UserDetails para usuario: {}", user.getAlias());
+                                return new org.springframework.security.core.userdetails.User(
+                                        user.getAlias(),
+                                        user.getContrasena(),
+                                        authorities
+                                );
+                            });
                 });
     }
 }

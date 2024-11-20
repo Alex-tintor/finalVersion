@@ -13,11 +13,12 @@ import com.portfolio.finalversion.models.security.User;
 import com.portfolio.finalversion.repositories.RolRepository;
 import com.portfolio.finalversion.services.servicesi.RolServiceInterface;
 
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
-// @DependsOn("rolRepository")
+@Slf4j
 public class RolServiceImplement implements RolServiceInterface{
     
     @Autowired
@@ -37,4 +38,23 @@ public class RolServiceImplement implements RolServiceInterface{
     public Mono<Rol> findRoleBytipo(RoleEnum role) {
         return rolRepository.findByTipoRol(role).defaultIfEmpty(new Rol());
     }
+
+    @Override
+    public Flux<Rol> findRolesByUserId(Long userId) {
+        log.warn("Inicio del método findRolesByUserId con userId: {}", userId);
+    
+        return rolRepository.findRolesByUserId()
+                .doOnSubscribe(subscription -> log.warn("Se suscribió al flujo para buscar roles del usuario con ID: {}", userId))
+                .doOnNext(rol -> log.warn("Rol encontrado: {}", rol.getTipoRol()))
+                .doOnComplete(() -> log.warn("Finalizó la búsqueda de roles para userId: {}", userId))
+                .doOnError(e -> log.warn("Error durante la búsqueda de roles para userId: {}", userId, e))
+                .defaultIfEmpty(null)
+                .doOnNext(rol -> {
+                    if (rol == null) {
+                        log.warn("No se encontraron roles para el usuario con ID: {}", userId);
+                    }
+                })
+                .doOnTerminate(() -> log.warn("Método findRolesByUserId finalizó para userId: {}", userId));
+    }
+    
 }

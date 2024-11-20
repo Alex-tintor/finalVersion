@@ -20,7 +20,7 @@ import lombok.Data;
 public class User{
     
     @Id
-    @Column("uuid")
+    @Column("uId")
     private Long id;
 
     @Column("uNombre")

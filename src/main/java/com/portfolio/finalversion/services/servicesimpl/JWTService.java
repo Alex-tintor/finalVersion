@@ -1,5 +1,6 @@
 package com.portfolio.finalversion.services.servicesimpl;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +15,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -33,16 +35,18 @@ public class JWTService implements JWTServicei {
 
     @Override
     public String generarToken(Authentication auth) {
-        log.info("inicia generarToken(Authentication auth)");
+        log.warn("inicia generarToken(Authentication auth)");
         UserDetails userDetails = (UserDetails) auth.getPrincipal();
         Date ahora = new Date();
+        log.warn("AHORA {}",ahora);
         Date fechaDeExpiracion = new Date(ahora.getTime() + this.jwtExpiration);
+        log.warn("fechaDeExpiracion {}",fechaDeExpiracion);
 
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
                 .setExpiration(fechaDeExpiracion)
-                .signWith(SignatureAlgorithm.ES512,jwtSecret)
+                .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
                 .compact();
     }
 

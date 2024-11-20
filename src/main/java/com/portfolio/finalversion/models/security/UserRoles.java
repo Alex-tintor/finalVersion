@@ -1,5 +1,6 @@
 package com.portfolio.finalversion.models.security;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -12,10 +13,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Table("UserRoles")
 public class UserRoles {
+
+    @Id
+    @Column("urId")
+    private Long Id;
     
     @Column("urUserId")
     private Long userId;
 
     @Column("urRolId")
     private Long rolId;
+
+    public UserRoles(Long userId,Long rolid){
+        this.rolId = rolid;
+        this.userId = userId;
+    }
 }

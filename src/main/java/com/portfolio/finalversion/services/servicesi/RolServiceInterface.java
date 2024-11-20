@@ -6,6 +6,7 @@ import com.portfolio.finalversion.models.enums.RoleEnum;
 import com.portfolio.finalversion.models.security.Rol;
 import com.portfolio.finalversion.models.security.User;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface RolServiceInterface {
@@ -15,4 +16,5 @@ public interface RolServiceInterface {
     public Boolean isAdmin(User user);
 
     public Mono<Rol> findRoleBytipo(RoleEnum role);
+    public Flux<Rol> findRolesByUserId(Long userId);
 }

@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.portfolio.finalversion.models.dtos.LogInDTO;
+import com.portfolio.finalversion.models.security.JwtAuthenticationResponse;
 import com.portfolio.finalversion.services.servicesimpl.JWTService;
 import com.sun.tools.javac.Main;
 
@@ -44,24 +45,19 @@ public class LogInController {
 
         return reactiveAuthenticationManager
             .authenticate(new UsernamePasswordAuthenticationToken(logInDTO.getAlias(), logInDTO.getPassword()))
+            .doOnSubscribe(sub -> logger.warn("Intentando autenticar al usuario con alias: {}", logInDTO.getAlias()))
+            .doOnNext(auth -> logger.warn("Autenticación exitosa para el usuario: {}", auth.getName()))
+            .doOnError(e -> logger.warn("Error durante la autenticación: {}", e.getMessage(), e))
             .map(auth ->{
+                log.warn("objeto de auth {}",auth.toString());
                 String token = jwtService.generarToken(auth);
+                log.warn("TOKEN CREADO {}",token);
                 return ResponseEntity.ok(new JwtAuthenticationResponse(token));
             })
             .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()));
     }
 
     public record LoginRequest(String alias, String password) {
-    }
-
-    public static class JwtAuthenticationResponse{
-    
-        private final String token;
-
-        public JwtAuthenticationResponse(String token){
-            this.token = token;
-        }
-        
     }
     
 }
