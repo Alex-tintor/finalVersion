@@ -76,7 +76,7 @@ public class UserServiceImplement implements UserServiceInterface, ReactiveUserD
                             .flatMap(rol -> 
                                 rolService.findRoleBytipo(rol.getTipoRol())
                                     .flatMap(rolEncontrado -> 
-                                        userRolesRepository.save(new UserRoles(rolEncontrado.getRUuid(), usuarioCreado.getId())) 
+                                        userRolesRepository.save(new UserRoles(usuarioCreado.getId(),rolEncontrado.getRUuid())) 
                                     )
                             )
                             .then(Mono.just(user.getId())) 

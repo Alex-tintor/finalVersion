@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.portfolio.finalversion.services.servicesi.JWTServicei;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
@@ -46,25 +47,27 @@ public class JWTService implements JWTServicei {
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
                 .setExpiration(fechaDeExpiracion)
-                .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
+                .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)),SignatureAlgorithm.HS256)
                 .compact();
     }
 
     @Override
     public String obtenerAliasDeJWT(String token) {
-        log.info("inicia obtenerAliasDeJWT(String token)");
-        return Jwts.parser()
-                .setSigningKey(jwtSecret)
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        log.warn("inicia obtenerAliasDeJWT(String token)");
+        int bits  = jwtSecret.getBytes(StandardCharsets.UTF_8).length * 8 ;
+        Claims  claims = Jwts.parserBuilder().setSigningKey(jwtSecret.getBytes()).build().parseClaimsJws(token).getBody();
+        return claims.getSubject();
     }
 
     @Override
     public Boolean validarToken(String token) {
-        log.info("inicia validarToken(String token)");
+        log.warn("inicia validarToken(String token)");
+        log.warn("-0-0-0-0-0 token del validar {}", token);
         try {
-            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
+            Jwts.parserBuilder()
+            .setSigningKey(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
+            .build()
+            .parseClaimsJws(token);
             return true;
         } catch (MalformedJwtException | ExpiredJwtException | UnsupportedJwtException | IllegalArgumentException e) {
             log.error("falla validarToken(String token)");

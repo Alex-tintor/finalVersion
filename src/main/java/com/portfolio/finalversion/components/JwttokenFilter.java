@@ -40,11 +40,7 @@ public class JwttokenFilter implements WebFilter{
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
-        String path = request.getPath().toString();
 
-        if (request.getPath().toString().startsWith("/usuarios/consultar/rol")) {
-            return chain.filter(exchange);
-        }
         String token = obtenerJwtDePeticion(request);
 
         if (token != null && jwtService.validarToken(token)) {
@@ -65,7 +61,7 @@ public class JwttokenFilter implements WebFilter{
     private String obtenerJwtDePeticion(ServerHttpRequest request){
         log.info("entra a obtener token");
         String bearerToken = request.getHeaders().getFirst("Authorization");
-        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")){
+        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")){
             return bearerToken.substring(7);
         }
         return null;
