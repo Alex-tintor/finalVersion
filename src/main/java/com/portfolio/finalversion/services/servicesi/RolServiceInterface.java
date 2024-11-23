@@ -1,10 +1,8 @@
 package com.portfolio.finalversion.services.servicesi;
 
-import org.springframework.stereotype.Service;
-
-import com.portfolio.finalversion.models.enums.RoleEnum;
-import com.portfolio.finalversion.models.security.Rol;
-import com.portfolio.finalversion.models.security.User;
+import com.shared_data.shared.models.Rol;
+import com.shared_data.shared.models.User;
+import com.shared_data.shared.models.enums.RoleEnum;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

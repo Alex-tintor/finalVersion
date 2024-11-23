@@ -7,11 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 
-import com.portfolio.finalversion.models.enums.RoleEnum;
-import com.portfolio.finalversion.models.security.Rol;
-import com.portfolio.finalversion.models.security.User;
 import com.portfolio.finalversion.repositories.RolRepository;
 import com.portfolio.finalversion.services.servicesi.RolServiceInterface;
+import com.shared_data.shared.models.Rol;
+import com.shared_data.shared.models.User;
+import com.shared_data.shared.models.enums.RoleEnum;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;

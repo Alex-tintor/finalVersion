@@ -11,15 +11,15 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.google.gson.Gson;
-import com.portfolio.finalversion.models.dtos.UserDTO;
-import com.portfolio.finalversion.models.security.User;
-import com.portfolio.finalversion.models.security.UserRoles;
 import com.portfolio.finalversion.repositories.RolRepository;
 import com.portfolio.finalversion.repositories.UserRepository;
 import com.portfolio.finalversion.repositories.UserRolesRepository;
 import com.portfolio.finalversion.services.servicesi.UserServiceInterface;
-import com.portfolio.finalversion.services.utils.ExcepcionPersonalizada;
-import com.portfolio.finalversion.services.utils.SecurityUtils;
+import com.shared_data.shared.models.User;
+import com.shared_data.shared.models.UserRoles;
+import com.shared_data.shared.models.dtos.UserDTO;
+import com.shared_data.shared.utilities.ExcepcionPersonalizada;
+import com.shared_data.shared.utilities.SecurityUtils;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
@@ -55,34 +55,6 @@ public class UserServiceImplement implements UserServiceInterface, ReactiveUserD
 
     public Mono<User> findById(Long userId) {
         return userRepository.findById(userId).defaultIfEmpty(new User());
-    }
-
-    public Mono<Long> createOrUpdate(User user) throws ExcepcionPersonalizada {
-        user.setContrasena(SecurityUtils.encodePass(user.getContrasena()));
-        user.setFechaActualizacion(LocalDateTime.now());
-        user.setFechaCreacion(LocalDateTime.now());
-    
-        if (user.getRoles() == null || user.getRoles().isEmpty()) {
-            return Mono.error(new ExcepcionPersonalizada("No es posible crear un usuario sin roles"));
-        }
-    
-        Mono<Object> rsultMono = findByAlias(user.getAlias())
-            .flatMap(existeUsuario -> Mono.error(new ExcepcionPersonalizada(
-                "Alias ya existe, no es posible crear un usuario con un alias existente, por favor intente de nuevo con un alias distinto")))
-            .switchIfEmpty(
-                userRepository.save(user) // Guarda el usuario
-                    .flatMap(usuarioCreado -> 
-                        Flux.fromIterable(user.getRoles())
-                            .flatMap(rol -> 
-                                rolService.findRoleBytipo(rol.getTipoRol())
-                                    .flatMap(rolEncontrado -> 
-                                        userRolesRepository.save(new UserRoles(usuarioCreado.getId(),rolEncontrado.getRUuid())) 
-                                    )
-                            )
-                            .then(Mono.just(user.getId())) 
-                    )
-            );
-        return rsultMono.cast(Long.class);
     }
 
     public Mono<Long> createOrUpdate(Mono<User> user) {        

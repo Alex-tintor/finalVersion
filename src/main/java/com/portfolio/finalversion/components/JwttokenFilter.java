@@ -23,16 +23,15 @@ import org.springframework.web.server.WebFilterChain;
 import com.portfolio.finalversion.services.servicesi.UserServiceInterface;
 import com.portfolio.finalversion.services.servicesimpl.JWTService;
 import com.portfolio.finalversion.services.servicesimpl.UserServiceImplement;
+import com.shared_data.shared.components.JwtFilterI;
+import com.shared_data.shared.utilities.SecurityUtils;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @Component
 @Slf4j
-public class JwttokenFilter implements WebFilter{
-
-    @Autowired
-    private JWTService jwtService;
+public class JwttokenFilter implements JwtFilterI{
 
     @Autowired
     private UserServiceImplement userServiceImplement;
@@ -43,9 +42,9 @@ public class JwttokenFilter implements WebFilter{
 
         String token = obtenerJwtDePeticion(request);
 
-        if (token != null && jwtService.validarToken(token)) {
+        if (token != null && SecurityUtils.validarToken(token)) {
             log.info("Token válido encontrado");
-            String alias = jwtService.obtenerAliasDeJWT(token);
+            String alias = SecurityUtils.obtenerAliasDeJWT(token);
 
             return userServiceImplement.findByUsername(alias).flatMap(userDetails -> {
                 Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -58,7 +57,8 @@ public class JwttokenFilter implements WebFilter{
         return chain.filter(exchange); // Continuar si no hay token o no es válido
     }
     
-    private String obtenerJwtDePeticion(ServerHttpRequest request){
+    @Override
+    public String obtenerJwtDePeticion(ServerHttpRequest request){
         log.info("entra a obtener token");
         String bearerToken = request.getHeaders().getFirst("Authorization");
         if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")){
@@ -66,4 +66,5 @@ public class JwttokenFilter implements WebFilter{
         }
         return null;
     }
+
 }

@@ -2,7 +2,7 @@ package com.portfolio.finalversion.repositories;
 
 import org.springframework.stereotype.Repository;
 
-import com.portfolio.finalversion.models.security.User;
+import com.shared_data.shared.models.User;
 
 import reactor.core.publisher.Mono;
 

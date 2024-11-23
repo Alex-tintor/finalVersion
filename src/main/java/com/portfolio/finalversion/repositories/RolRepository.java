@@ -2,15 +2,13 @@ package com.portfolio.finalversion.repositories;
 
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.portfolio.finalversion.models.security.Rol;
+import com.shared_data.shared.models.Rol;
+import com.shared_data.shared.models.enums.RoleEnum;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import java.util.List;
-import com.portfolio.finalversion.models.enums.RoleEnum;
 
 
 @Repository

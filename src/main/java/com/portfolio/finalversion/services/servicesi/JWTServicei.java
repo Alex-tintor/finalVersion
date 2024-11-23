@@ -11,7 +11,4 @@ public interface JWTServicei {
  
     public String generarToken(Authentication auth);
 
-    public String obtenerAliasDeJWT(String token);
-
-    public Boolean validarToken(String token);
 }
